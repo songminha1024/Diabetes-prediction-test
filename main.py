@@ -1,7 +1,6 @@
 
 import streamlit as st
 import pandas as pd
-import os
 
 # 페이지 설정
 st.set_page_config(
@@ -10,40 +9,29 @@ st.set_page_config(
     layout="wide"
 )
 
-# 데이터 불러오기
+# 제목 및 프로젝트 소개
 st.title("🩺 당뇨병 예측 실습실")
 st.subheader("건강 데이터를 활용한 AI 당뇨병 예측 모델 개발")
 
-st.write("""
-나이, BMI, 당화혈색소, 혈당 등의 건강 데이터를 살펴보고
-당뇨병 여부와 어떤 관계가 있는지 알아보는 프로젝트입니다.
-""")
+st.write(
+    "나이, BMI, 당화혈색소, 혈당 등의 건강 데이터를 활용하여 "
+    "당뇨병 여부를 알아보는 프로젝트입니다."
+)
 
 st.divider()
 
-# CSV 파일 불러오기
-file = st.file_uploader("당뇨병 데이터 CSV 파일을 업로드하세요.", type=["csv"])
+# GitHub에 저장된 CSV 데이터 불러오기
+df = pd.read_csv("diabetes_prediction_dataset.csv")
 
-if file is not None:
-    df = pd.read_csv(file)
-elif os.path.exists("diabetes_prediction_dataset.csv"):
-    df = pd.read_csv("diabetes_prediction_dataset.csv")
-else:
-    st.info("GitHub 저장소에 CSV 파일을 올리거나 위에서 파일을 업로드해 주세요.")
-    st.stop()
-
-# 데이터 크기 표시
+# 데이터 기본 정보
 st.subheader("📊 데이터 기본 정보")
 
-col1, col2, col3 = st.columns(3)
+col1, col2 = st.columns(2)
 
 with col1:
-    st.metric("전체 데이터 수", f"{df.shape[0]:,}개")
-
-with col2:
     st.metric("전체 행 개수", f"{df.shape[0]:,}개")
 
-with col3:
+with col2:
     st.metric("전체 열 개수", f"{df.shape[1]}개")
 
 # 데이터 미리보기
@@ -69,7 +57,7 @@ column_info = {
 
 for column, description in column_info.items():
     if column in df.columns:
-        st.write(f"**{column}** : {description}")
+        st.write(f"**{column}**: {description}")
 
 # 데이터 전처리
 processed_df = df.copy()
@@ -78,24 +66,16 @@ processed_df = df.copy()
 processed_df = processed_df.drop_duplicates()
 
 # BMI 결측치를 중앙값으로 대체
-if "bmi" in processed_df.columns:
-    processed_df["bmi"] = processed_df["bmi"].fillna(
-        processed_df["bmi"].median()
-    )
+processed_df["bmi"] = processed_df["bmi"].fillna(
+    processed_df["bmi"].median()
+)
 
 # 문자형 데이터를 숫자로 변환
-category_columns = ["gender", "smoking_history"]
-existing_columns = [
-    col for col in category_columns
-    if col in processed_df.columns
-]
-
-if existing_columns:
-    processed_df = pd.get_dummies(
-        processed_df,
-        columns=existing_columns,
-        dtype=int
-    )
+processed_df = pd.get_dummies(
+    processed_df,
+    columns=["gender", "smoking_history"],
+    dtype=int
+)
 
 # 전처리된 데이터 저장
 processed_df.to_csv(
