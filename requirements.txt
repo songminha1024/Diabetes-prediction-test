@@ -4,3 +4,4 @@ plotly
 matplotlib
 scikit-learn
 koreanize-matplotlib
+setuptools
